@@ -91,6 +91,113 @@
             margin-top: 40px;
             height: calc(100vh - 40px);
         }
+        #wechat-guide {
+            display: none;
+            min-height: 100vh;
+            box-sizing: border-box;
+            padding: 24px 20px 32px;
+            background: linear-gradient(180deg, #f0f4ff 0%, #ffffff 45%);
+            color: #1a1a2e;
+        }
+        #wechat-guide .guide-header {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+        #wechat-guide .guide-header h1 {
+            margin: 0 0 10px;
+            font-size: 20px;
+            font-weight: 600;
+        }
+        #wechat-guide .guide-header p {
+            margin: 0;
+            font-size: 14px;
+            color: #5c6370;
+            line-height: 1.6;
+        }
+        #wechat-guide .guide-arrow {
+            position: fixed;
+            top: 8px;
+            right: 18px;
+            width: 72px;
+            height: 72px;
+            pointer-events: none;
+            opacity: 0.85;
+        }
+        #wechat-guide .steps {
+            list-style: none;
+            margin: 0 0 24px;
+            padding: 0;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+            overflow: hidden;
+        }
+        #wechat-guide .steps li {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 16px 18px;
+            font-size: 15px;
+            line-height: 1.5;
+            border-bottom: 1px solid #eef0f4;
+        }
+        #wechat-guide .steps li:last-child {
+            border-bottom: none;
+        }
+        #wechat-guide .step-num {
+            flex-shrink: 0;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: #4f6ef7;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #wechat-guide .target-preview {
+            font-size: 13px;
+            color: #888;
+            word-break: break-all;
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 0 8px;
+        }
+        #wechat-guide .target-preview strong {
+            color: #333;
+            font-weight: 500;
+        }
+        #wechat-guide .guide-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-width: 320px;
+            margin: 0 auto;
+        }
+        #wechat-guide .guide-actions button {
+            width: 100%;
+            padding: 14px 16px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+        #wechat-guide .btn-copy {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+        }
+        #wechat-guide .btn-copy:active {
+            opacity: 0.9;
+        }
+        #wechat-guide .copy-hint {
+            text-align: center;
+            font-size: 12px;
+            color: #999;
+            margin-top: 12px;
+        }
     </style>
 </head>
 <body>
@@ -108,6 +215,27 @@
     
     <div id="loading" class="loading">
         正在加载中...
+    </div>
+
+    <div id="wechat-guide">
+        <svg class="guide-arrow" viewBox="0 0 64 64" aria-hidden="true">
+            <path d="M8 48 Q 40 8 56 12" fill="none" stroke="#4f6ef7" stroke-width="3" stroke-linecap="round"/>
+            <polygon points="56,12 48,20 52,14 58,18" fill="#4f6ef7"/>
+        </svg>
+        <div class="guide-header">
+            <h1>请在浏览器中打开</h1>
+            <p>微信/QQ 内无法直接跳转到目标网站，请按下方步骤用系统浏览器打开本页，打开后将自动跳转。</p>
+        </div>
+        <ol class="steps">
+            <li><span class="step-num">1</span><span>点击右上角 <strong>「···」</strong> 或 <strong>「⋮」</strong> 菜单</span></li>
+            <li><span class="step-num">2</span><span>选择 <strong>「在浏览器中打开」</strong> 或 <strong>「在Safari/Chrome中打开」</strong></span></li>
+            <li><span class="step-num">3</span><span>在浏览器中打开后，将自动跳转到目标链接</span></li>
+        </ol>
+        <p class="target-preview">即将访问：<strong id="guide-target-host">...</strong></p>
+        <div class="guide-actions">
+            <button type="button" class="btn-copy" id="copy-page-link">复制本页链接</button>
+        </div>
+        <p class="copy-hint">若找不到菜单，可复制链接后到浏览器地址栏粘贴打开</p>
     </div>
     
     <div id="error" class="error" style="display: none;">
@@ -311,41 +439,54 @@
         }, 500);
     }
     
+    // 微信/QQ 内：引导用户在系统浏览器中打开本页（浏览器内会走跳转逻辑）
+    function showWeChatGuide(targetUrl) {
+        document.title = '请在浏览器中打开';
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('wechat-guide').style.display = 'block';
+
+        var hostEl = document.getElementById('guide-target-host');
+        if (hostEl) {
+            try {
+                hostEl.textContent = getTitleFromUrl(targetUrl);
+            } catch (e) {
+                hostEl.textContent = targetUrl;
+            }
+        }
+    }
+
+    function copyTextToClipboard(text, onSuccess, onFail) {
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(text).then(onSuccess).catch(onFail);
+            return;
+        }
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.setAttribute('readonly', '');
+        ta.style.position = 'fixed';
+        ta.style.left = '-9999px';
+        document.body.appendChild(ta);
+        ta.select();
+        try {
+            document.execCommand('copy');
+            onSuccess();
+        } catch (e) {
+            onFail();
+        }
+        document.body.removeChild(ta);
+    }
+
     // 主函数
     function init() {
         var targetUrl = getTargetUrl();
         console.log("目标URL:", targetUrl);
         
         if (isInWeChatOrQQ()) {
-            // 在QQ/微信中，显示iframe
-            console.log("检测到在QQ/微信中打开，使用iframe内嵌显示");
-            
-            // 先显示默认标题
-            document.title = '中转页面';
-            showTitleBar('正在加载...');
-            
-            // 显示iframe并加载内容
-            document.getElementById('loading').style.display = 'none';
-            document.getElementById('iframe-container').style.display = 'block';
-            document.getElementById('content-frame').src = targetUrl;
-            
-            // 启动URL跟踪
-            startUrlTracking();
-            
-            // 初始化提示信息
-            updateTipWithCurrentUrl();
-            
-            // 尝试获取页面标题
-            getPageTitle(targetUrl, function(title) {
-                console.log("获取到页面标题:", title);
-                document.title = title;
-                showTitleBar(title);
-            });
-            
+            console.log("检测到在QQ/微信中打开，显示浏览器引导页");
+            showWeChatGuide(targetUrl);
         } else {
-            // 直接在浏览器中打开，跳转到目标网址
             console.log("检测到在浏览器中直接打开，跳转到目标网址");
-            window.location.href = targetUrl;
+            window.location.replace(targetUrl);
         }
     }
     
@@ -598,6 +739,15 @@
         }
     }
     
+    document.getElementById('copy-page-link').addEventListener('click', function() {
+        var pageUrl = window.location.href;
+        copyTextToClipboard(
+            pageUrl,
+            function() { alert('链接已复制，请粘贴到浏览器地址栏打开'); },
+            function() { alert('请手动复制地址栏链接：\n' + pageUrl); }
+        );
+    });
+
     // 处理在浏览器中打开的链接
     document.getElementById('open-browser').addEventListener('click', function(e) {
         e.preventDefault();
