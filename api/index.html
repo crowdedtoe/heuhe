@@ -224,7 +224,7 @@
         </svg>
         <div class="guide-header">
             <h1>请在浏览器中打开</h1>
-            <p>微信/QQ 内无法直接跳转到目标网站，请按下方步骤用系统浏览器打开本页，打开后将自动跳转。</p>
+            <p>微信/QQ/淘宝等 App 内置浏览器无法可靠跳转，请用系统浏览器打开本页；打开后将自动跳转到您要访问的完整链接。</p>
         </div>
         <ol class="steps">
             <li><span class="step-num">1</span><span>点击右上角 <strong>「···」</strong> 或 <strong>「⋮」</strong> 菜单</span></li>
@@ -244,23 +244,66 @@
     </div>
     
     <script>
-    // 检测是否在QQ/微信中打开
-    function isInWeChatOrQQ() {
+    var DEFAULT_TARGET = "https://www.yiove.com";
+
+    // 微信/QQ/淘宝等 App 内置 WebView：只展示引导，避免内置浏览器劫持或截断跳转
+    function isInAppBrowserNeedGuide() {
         var ua = navigator.userAgent.toLowerCase();
-        return ua.indexOf('micromessenger') > -1 || ua.indexOf('qq/') > -1;
-    }
-    
-    // 获取URL参数中的目标网址
-    function getTargetUrl() {
-        var url = document.location.toString();
-        var urlParmStr = url.slice(url.indexOf('=')+1);
-        
-        // 设置默认URL
-        if (urlParmStr == url) {
-            urlParmStr = "https://www.yiove.com";
+        if (ua.indexOf('micromessenger') > -1 || ua.indexOf('qq/') > -1) {
+            return true;
         }
-        
-        return urlParmStr;
+        if (ua.indexOf('aliapp') > -1 || ua.indexOf('taobao') > -1 || ua.indexOf('tmall') > -1) {
+            return true;
+        }
+        if (ua.indexOf('dingtalk') > -1 || ua.indexOf('weibo') > -1) {
+            return true;
+        }
+        return false;
+    }
+
+    function decodeTargetParam(raw) {
+        if (!raw) {
+            return '';
+        }
+        try {
+            return decodeURIComponent(raw.replace(/\+/g, ' '));
+        } catch (e) {
+            return raw;
+        }
+    }
+
+    // 获取 URL 参数中的目标网址（支持 encodeURIComponent 编码，兼容旧版未编码含 & 的链接）
+    function getTargetUrl() {
+        var href = window.location.href;
+        var hashIndex = href.indexOf('#');
+        if (hashIndex !== -1) {
+            href = href.slice(0, hashIndex);
+        }
+        var qIndex = href.indexOf('?');
+        if (qIndex === -1) {
+            return DEFAULT_TARGET;
+        }
+        var query = href.slice(qIndex + 1);
+        var params = new URLSearchParams(query);
+        var encoded = params.get('url');
+        if (encoded) {
+            var decoded = decodeTargetParam(encoded);
+            if (/^https?:\/\//i.test(decoded)) {
+                return decoded;
+            }
+        }
+
+        var lower = query.toLowerCase();
+        var keyIndex = lower.indexOf('url=');
+        if (keyIndex === -1) {
+            return DEFAULT_TARGET;
+        }
+        var legacy = query.slice(keyIndex + 4);
+        legacy = decodeTargetParam(legacy);
+        if (/^https?:\/\//i.test(legacy)) {
+            return legacy;
+        }
+        return DEFAULT_TARGET;
     }
     
     // 尝试通过多种方式获取页面标题
@@ -481,12 +524,16 @@
         var targetUrl = getTargetUrl();
         console.log("目标URL:", targetUrl);
         
-        if (isInWeChatOrQQ()) {
-            console.log("检测到在QQ/微信中打开，显示浏览器引导页");
+        if (isInAppBrowserNeedGuide()) {
+            console.log("检测到 App 内置浏览器，显示系统浏览器引导页");
             showWeChatGuide(targetUrl);
-        } else {
-            console.log("检测到在浏览器中直接打开，跳转到目标网址");
+        } else if (/^https?:\/\//i.test(targetUrl)) {
+            console.log("检测到系统浏览器，跳转到目标网址:", targetUrl);
             window.location.replace(targetUrl);
+        } else {
+            console.warn("目标链接无效:", targetUrl);
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('error').style.display = 'flex';
         }
     }
     
