@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=0,viewport-fit=cover">
     <title>加载中，请稍等...</title>
+    <script src="../assets/js/linkpass_entry.js"></script>
     <style>
         body {
             margin: 0;
@@ -233,9 +234,10 @@
         </ol>
         <p class="target-preview">即将访问：<strong id="guide-target-host">...</strong></p>
         <div class="guide-actions">
-            <button type="button" class="btn-copy" id="copy-page-link">复制本页链接</button>
+            <button type="button" class="btn-copy" id="force-jump">继续访问目标网站</button>
+            <button type="button" class="btn-copy" id="copy-page-link" style="background:#eef0f4;color:#333;font-weight:500;">复制本页链接</button>
         </div>
-        <p class="copy-hint">若找不到菜单，可复制链接后到浏览器地址栏粘贴打开</p>
+        <p class="copy-hint">已在 Safari/Chrome 中打开仍停在本页？点「继续访问目标网站」</p>
     </div>
     
     <div id="error" class="error" style="display: none;">
@@ -261,47 +263,20 @@
         return false;
     }
 
-    function decodeTargetParam(raw) {
-        if (!raw) {
-            return '';
-        }
-        try {
-            return decodeURIComponent(raw.replace(/\+/g, ' '));
-        } catch (e) {
-            return raw;
-        }
-    }
-
-    // 获取 URL 参数中的目标网址（支持 encodeURIComponent 编码，兼容旧版未编码含 & 的链接）
     function getTargetUrl() {
-        var href = window.location.href;
-        var hashIndex = href.indexOf('#');
-        if (hashIndex !== -1) {
-            href = href.slice(0, hashIndex);
+        var parsed = '';
+        if (window.LinkPassEntry && window.LinkPassEntry.parseTargetFromLocation) {
+            parsed = window.LinkPassEntry.parseTargetFromLocation(window.location);
         }
-        var qIndex = href.indexOf('?');
-        if (qIndex === -1) {
-            return DEFAULT_TARGET;
-        }
-        var query = href.slice(qIndex + 1);
-        var params = new URLSearchParams(query);
-        var encoded = params.get('url');
-        if (encoded) {
-            var decoded = decodeTargetParam(encoded);
-            if (/^https?:\/\//i.test(decoded)) {
-                return decoded;
+        if (!parsed) {
+            var href = window.location.href;
+            var qIndex = href.indexOf('?');
+            if (qIndex !== -1 && window.LinkPassEntry && window.LinkPassEntry.parseTargetFromQuery) {
+                parsed = window.LinkPassEntry.parseTargetFromQuery(href.slice(qIndex + 1));
             }
         }
-
-        var lower = query.toLowerCase();
-        var keyIndex = lower.indexOf('url=');
-        if (keyIndex === -1) {
-            return DEFAULT_TARGET;
-        }
-        var legacy = query.slice(keyIndex + 4);
-        legacy = decodeTargetParam(legacy);
-        if (/^https?:\/\//i.test(legacy)) {
-            return legacy;
+        if (/^https?:\/\//i.test(parsed)) {
+            return parsed;
         }
         return DEFAULT_TARGET;
     }
@@ -786,8 +761,22 @@
         }
     }
     
+    document.getElementById('force-jump').addEventListener('click', function() {
+        var targetUrl = getTargetUrl();
+        if (/^https?:\/\//i.test(targetUrl)) {
+            window.location.replace(targetUrl);
+        } else {
+            alert('未能解析目标链接，请重新生成二维码（需带 ?url= 且建议编码）');
+        }
+    });
+
     document.getElementById('copy-page-link').addEventListener('click', function() {
         var pageUrl = window.location.href;
+        if (window.LinkPassEntry && window.LinkPassEntry.cleanHrefFromTaobaoScan) {
+            pageUrl = window.LinkPassEntry.cleanHrefFromTaobaoScan(pageUrl);
+        } else if (/_tbscancodeapproach_/i.test(pageUrl)) {
+            pageUrl = pageUrl.replace(/([?&])_tbscancodeapproach_=[^&]*/gi, '$1').replace(/[?&]$/, '');
+        }
         copyTextToClipboard(
             pageUrl,
             function() { alert('链接已复制，请粘贴到浏览器地址栏打开'); },
