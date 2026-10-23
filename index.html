@@ -199,10 +199,19 @@
 				justify-content: center;
 				margin-bottom: 0.75em;
 			}
-			.link-result-item .qr-wrap canvas {
+			.link-result-item .qr-wrap .qr-box {
+				display: inline-block;
 				border-radius: 8px;
 				background: #fff;
 				padding: 6px;
+				min-width: 180px;
+				min-height: 180px;
+			}
+			.link-result-item .qr-wrap .qr-box img,
+			.link-result-item .qr-wrap .qr-box canvas {
+				display: block;
+				max-width: 100%;
+				height: auto;
 			}
 			.link-result-item .jump-link {
 				display: block;
@@ -249,7 +258,7 @@
 		</form>
 		<div id="b_url"></div>
 
-		<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
+		<script src="./assets/js/qrcode.min.js"></script>
 		<script src="./assets/js/build_url.js"></script>
 
 		<!-- Footer -->
