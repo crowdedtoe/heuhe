@@ -68,19 +68,36 @@ function copyToClipboard(text) {
     });
 }
 
-function renderQr(canvas, text) {
-    if (!window.QRCode || !canvas) {
+function renderQr(container, text) {
+    if (!container) {
         return;
     }
-    QRCode.toCanvas(canvas, text, {
-        width: 180,
-        margin: 2,
-        errorCorrectionLevel: 'M'
-    }, function (err) {
-        if (err) {
+    container.innerHTML = '';
+    if (window.QRCode && typeof window.QRCode === 'function') {
+        try {
+            /* 本地 qrcodejs（davidshimjs），不依赖 jsdelivr CDN */
+            new QRCode(container, {
+                text: text,
+                width: 180,
+                height: 180,
+                colorDark: '#000000',
+                colorLight: '#ffffff',
+                correctLevel: QRCode.CorrectLevel.M
+            });
+            return;
+        } catch (err) {
             console.error(err);
         }
-    });
+    }
+    var img = document.createElement('img');
+    img.width = 180;
+    img.height = 180;
+    img.alt = '二维码';
+    img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=' + encodeURIComponent(text);
+    img.onerror = function () {
+        container.textContent = '二维码加载失败，请复制下方链接使用';
+    };
+    container.appendChild(img);
 }
 
 function build_url() {
@@ -116,7 +133,7 @@ function build_url() {
         var jumpUrl = buildJumpUrl(item.url);
         html += '<div class="link-result-item">';
         html += '<p class="target-label">' + escapeHtml(item.label) + '</p>';
-        html += '<div class="qr-wrap"><canvas class="qr-canvas" id="qr-' + idx + '" aria-label="二维码"></canvas></div>';
+        html += '<div class="qr-wrap"><div class="qr-box" id="qr-' + idx + '" aria-label="二维码"></div></div>';
         html += '<a class="jump-link" href="' + escapeHtml(jumpUrl) + '" target="_blank" rel="noopener">' + escapeHtml(jumpUrl) + '</a>';
         html += '<button type="button" class="btn-copy-link" data-url="' + escapeHtml(jumpUrl) + '">复制链接</button>';
         html += '</div>';
@@ -131,8 +148,8 @@ function build_url() {
 
     targets.forEach(function (item, idx) {
         var jumpUrl = buildJumpUrl(item.url);
-        var canvas = document.getElementById('qr-' + idx);
-        renderQr(canvas, jumpUrl);
+        var qrBox = document.getElementById('qr-' + idx);
+        renderQr(qrBox, jumpUrl);
     });
 
     container.querySelectorAll('.btn-copy-link').forEach(function (btn) {
