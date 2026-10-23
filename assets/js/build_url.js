@@ -68,36 +68,146 @@ function copyToClipboard(text) {
     });
 }
 
+var QR_MODULE_SIZE = 200;
+var QR_QUIET_ZONE = 18;
+var QR_OUTER_BORDER = 3;
+
+function drawBorderedQrCanvas(source, text) {
+    var pad = QR_QUIET_ZONE;
+    var border = QR_OUTER_BORDER;
+    var size = QR_MODULE_SIZE;
+    var total = size + pad * 2 + border * 2;
+    var canvas = document.createElement('canvas');
+    canvas.width = total;
+    canvas.height = total;
+    canvas.className = 'qr-framed';
+    var ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, total, total);
+    ctx.drawImage(source, pad + border, pad + border, size, size);
+    ctx.strokeStyle = '#cccccc';
+    ctx.lineWidth = border;
+    ctx.strokeRect(border / 2, border / 2, total - border, total - border);
+    canvas.dataset.qrText = text;
+    return canvas;
+}
+
+function setQrBoxContent(container, canvas) {
+    container.innerHTML = '';
+    container.appendChild(canvas);
+    try {
+        container.dataset.qrPng = canvas.toDataURL('image/png');
+    } catch (e) {
+        container.dataset.qrPng = '';
+    }
+}
+
+function renderQrFromRemote(container, text) {
+    var img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.alt = '二维码';
+    img.onload = function () {
+        setQrBoxContent(container, drawBorderedQrCanvas(img, text));
+    };
+    img.onerror = function () {
+        container.textContent = '二维码加载失败，请复制下方链接使用';
+    };
+    img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=' + QR_MODULE_SIZE + 'x' + QR_MODULE_SIZE + '&margin=10&data=' + encodeURIComponent(text);
+}
+
 function renderQr(container, text) {
     if (!container) {
         return;
     }
     container.innerHTML = '';
-    if (window.QRCode && typeof window.QRCode === 'function') {
-        try {
-            /* 本地 qrcodejs（davidshimjs），不依赖 jsdelivr CDN */
-            new QRCode(container, {
-                text: text,
-                width: 180,
-                height: 180,
-                colorDark: '#000000',
-                colorLight: '#ffffff',
-                correctLevel: QRCode.CorrectLevel.M
-            });
-            return;
-        } catch (err) {
-            console.error(err);
-        }
+    container.removeAttribute('data-qr-png');
+
+    if (!window.QRCode || typeof window.QRCode !== 'function') {
+        renderQrFromRemote(container, text);
+        return;
     }
-    var img = document.createElement('img');
-    img.width = 180;
-    img.height = 180;
-    img.alt = '二维码';
-    img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=' + encodeURIComponent(text);
-    img.onerror = function () {
-        container.textContent = '二维码加载失败，请复制下方链接使用';
-    };
-    container.appendChild(img);
+
+    var host = document.createElement('div');
+    host.style.position = 'fixed';
+    host.style.left = '-9999px';
+    host.style.top = '0';
+    document.body.appendChild(host);
+
+    try {
+        new QRCode(host, {
+            text: text,
+            width: QR_MODULE_SIZE,
+            height: QR_MODULE_SIZE,
+            colorDark: '#000000',
+            colorLight: '#ffffff',
+            correctLevel: QRCode.CorrectLevel.M
+        });
+    } catch (err) {
+        document.body.removeChild(host);
+        console.error(err);
+        renderQrFromRemote(container, text);
+        return;
+    }
+
+    function finish(source) {
+        if (host.parentNode) {
+            document.body.removeChild(host);
+        }
+        if (!source) {
+            renderQrFromRemote(container, text);
+            return;
+        }
+        setQrBoxContent(container, drawBorderedQrCanvas(source, text));
+    }
+
+    function tryFinish() {
+        var canvas = host.querySelector('canvas');
+        if (canvas && canvas.width > 0) {
+            finish(canvas);
+            return;
+        }
+        var img = host.querySelector('img');
+        if (img) {
+            if (img.complete && img.naturalWidth) {
+                finish(img);
+            } else {
+                img.onload = function () { finish(img); };
+                img.onerror = function () { finish(null); };
+            }
+            return;
+        }
+        finish(null);
+    }
+
+    setTimeout(tryFinish, 80);
+}
+
+function copyQrImage(qrBox) {
+    var dataUrl = qrBox.dataset.qrPng;
+    if (!dataUrl) {
+        return Promise.reject(new Error('no png'));
+    }
+    if (navigator.clipboard && window.ClipboardItem) {
+        return fetch(dataUrl)
+            .then(function (res) { return res.blob(); })
+            .then(function (blob) {
+                return navigator.clipboard.write([
+                    new ClipboardItem({ 'image/png': blob })
+                ]);
+            });
+    }
+    return Promise.reject(new Error('clipboard unsupported'));
+}
+
+function downloadQrImage(qrBox, filename) {
+    var dataUrl = qrBox.dataset.qrPng;
+    if (!dataUrl) {
+        return;
+    }
+    var a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = filename || 'qrcode.png';
+    a.click();
 }
 
 function build_url() {
@@ -135,7 +245,11 @@ function build_url() {
         html += '<p class="target-label">' + escapeHtml(item.label) + '</p>';
         html += '<div class="qr-wrap"><div class="qr-box" id="qr-' + idx + '" aria-label="二维码"></div></div>';
         html += '<a class="jump-link" href="' + escapeHtml(jumpUrl) + '" target="_blank" rel="noopener">' + escapeHtml(jumpUrl) + '</a>';
+        html += '<div class="result-actions">';
+        html += '<button type="button" class="btn-copy-qr" data-idx="' + idx + '">复制二维码</button>';
+        html += '<button type="button" class="btn-save-qr" data-idx="' + idx + '">保存图片</button>';
         html += '<button type="button" class="btn-copy-link" data-url="' + escapeHtml(jumpUrl) + '">复制链接</button>';
+        html += '</div>';
         html += '</div>';
     });
     html += '</div>';
@@ -158,12 +272,34 @@ function build_url() {
             copyToClipboard(url).then(function () {
                 var old = btn.textContent;
                 btn.textContent = '已复制';
-                setTimeout(function () {
-                    btn.textContent = old;
-                }, 1500);
+                setTimeout(function () { btn.textContent = old; }, 1500);
             }).catch(function () {
                 alert('复制失败，请手动选择链接复制');
             });
+        });
+    });
+
+    container.querySelectorAll('.btn-copy-qr').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var idx = btn.getAttribute('data-idx');
+            var qrBox = document.getElementById('qr-' + idx);
+            copyQrImage(qrBox).then(function () {
+                var old = btn.textContent;
+                btn.textContent = '已复制';
+                setTimeout(function () { btn.textContent = old; }, 1500);
+            }).catch(function () {
+                downloadQrImage(qrBox, 'qrcode-' + idx + '.png');
+                alert('当前浏览器不支持直接复制图片，已触发下载，请从相册/文件发送');
+            });
+        });
+    });
+
+    container.querySelectorAll('.btn-save-qr').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var idx = btn.getAttribute('data-idx');
+            var qrBox = document.getElementById('qr-' + idx);
+            var label = targets[idx] ? targets[idx].label.replace(/[^\w.-]+/g, '_') : idx;
+            downloadQrImage(qrBox, 'qrcode-' + label + '.png');
         });
     });
 }
