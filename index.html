@@ -4,6 +4,7 @@
 		<title>QQ、微信防红链接生成 - Taocrypt</title>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<script src="assets/js/linkpass_entry.js"></script>
 		<link rel="stylesheet" href="assets/css/main.css" />
 		<style>
 			#password-overlay {
@@ -144,6 +145,92 @@
 					font-size: 16px;
 				}
 			}
+
+			#signup-form {
+				flex-wrap: wrap;
+				justify-content: center;
+				max-width: 36em;
+				margin: 0 auto;
+			}
+			#signup-form textarea#url {
+				width: 100%;
+				min-height: 8em;
+				padding: 0.85em 1em;
+				border-radius: 4px;
+				border: none;
+				background: rgba(255, 255, 255, 0.15);
+				color: inherit;
+				font-size: 0.9em;
+				line-height: 1.5;
+				resize: vertical;
+				font-family: inherit;
+			}
+			#signup-form textarea#url::placeholder {
+				color: rgba(255, 255, 255, 0.55);
+			}
+			#signup-form input[type="button"] {
+				flex-shrink: 0;
+			}
+			#b_url {
+				max-width: 960px;
+				margin: 2em auto 0;
+				padding: 0 1em;
+				text-align: left;
+			}
+			.link-results {
+				display: grid;
+				grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+				gap: 1.25em;
+			}
+			.link-result-item {
+				background: rgba(255, 255, 255, 0.12);
+				border-radius: 12px;
+				padding: 1em;
+				text-align: center;
+			}
+			.link-result-item .target-label {
+				margin: 0 0 0.75em;
+				font-size: 0.95em;
+				font-weight: 600;
+				word-break: break-all;
+			}
+			.link-result-item .qr-wrap {
+				display: flex;
+				justify-content: center;
+				margin-bottom: 0.75em;
+			}
+			.link-result-item .qr-wrap canvas {
+				border-radius: 8px;
+				background: #fff;
+				padding: 6px;
+			}
+			.link-result-item .jump-link {
+				display: block;
+				font-size: 0.72em;
+				line-height: 1.4;
+				word-break: break-all;
+				opacity: 0.9;
+				margin-bottom: 0.75em;
+			}
+			.link-result-item .btn-copy-link {
+				background: rgba(255, 255, 255, 0.2);
+				border: 1px solid rgba(255, 255, 255, 0.35);
+				color: inherit;
+				padding: 0.45em 1em;
+				border-radius: 6px;
+				cursor: pointer;
+				font-size: 0.85em;
+			}
+			.link-result-item .btn-copy-link:hover {
+				background: rgba(255, 255, 255, 0.28);
+			}
+			.gen-msg {
+				text-align: center;
+				margin-top: 1em;
+				font-size: 0.9em;
+			}
+			.gen-msg-error { color: #ffb4b4; }
+			.gen-msg-warn { color: #ffe08a; }
 		</style>
 	</head>
 	<body class="is-preload">
@@ -151,17 +238,18 @@
 		<!-- Header -->
 		<header id="header">
 			<h1>QQ、微信防红接口</h1>
-			<p>在下方输入需要跳转的链接，即可生成防红接口。<br>
-				复制生成的链接发到微信或 QQ；对方打开时会引导「在浏览器中打开」，浏览器内自动跳转到目标网址。</p>
+			<p>每行填写一个网址或域名（如 <code>ogquhm.com</code>），可批量生成。<br>
+				自动生成防红链接与二维码，请扫描/分享<strong>生成后的完整链接</strong>（含 <code>?url=</code>）。</p>
 		</header>
 
 		<!-- Signup Form -->
-		<form id="signup-form" method="post">
-			<input type="url" name="url" id="url" placeholder="需要跳转的网址" />
+		<form id="signup-form" method="post" onsubmit="return false;">
+			<textarea name="url" id="url" placeholder="每行一个，例如：&#10;ogquhm.com&#10;https://example.com/page"></textarea>
 			<input type="button" value="生成" onclick="build_url()"/>
 		</form>
-		<p id="b_url"></p>
+		<div id="b_url"></div>
 
+		<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
 		<script src="./assets/js/build_url.js"></script>
 
 		<!-- Footer -->
@@ -191,7 +279,7 @@
 		
 		<script>
 			// 密码验证功能
-			const CORRECT_PASSWORD = 'yq666';
+			const CORRECT_PASSWORD = 'taocrypt';
 			
 			// 检查是否已经验证过
 			function checkAuthStatus() {
