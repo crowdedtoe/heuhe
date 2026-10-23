@@ -96,75 +96,163 @@
             display: none;
             min-height: 100vh;
             box-sizing: border-box;
-            padding: 24px 20px 32px;
-            background: linear-gradient(180deg, #f0f4ff 0%, #ffffff 45%);
-            color: #1a1a2e;
+            padding: 0 0 env(safe-area-inset-bottom, 0);
+            background: #ededed;
+            color: #000;
+            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", "Microsoft YaHei", sans-serif;
+            position: relative;
+            overflow-x: hidden;
         }
-        #wechat-guide .guide-header {
-            text-align: center;
-            margin-bottom: 28px;
-        }
-        #wechat-guide .guide-header h1 {
-            margin: 0 0 10px;
-            font-size: 20px;
-            font-weight: 600;
-        }
-        #wechat-guide .guide-header p {
-            margin: 0;
-            font-size: 14px;
-            color: #5c6370;
-            line-height: 1.6;
-        }
-        #wechat-guide .guide-arrow {
-            position: fixed;
-            top: 8px;
-            right: 18px;
-            width: 72px;
-            height: 72px;
-            pointer-events: none;
-            opacity: 0.85;
-        }
-        #wechat-guide .steps {
-            list-style: none;
-            margin: 0 0 24px;
-            padding: 0;
+        #wechat-guide .guide-top {
+            padding: 28px 20px 16px;
+            padding-top: calc(28px + env(safe-area-inset-top, 0));
             background: #fff;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
-            overflow: hidden;
+            min-height: 38vh;
         }
-        #wechat-guide .steps li {
-            display: flex;
-            align-items: flex-start;
-            gap: 12px;
-            padding: 16px 18px;
-            font-size: 15px;
-            line-height: 1.5;
-            border-bottom: 1px solid #eef0f4;
+        #wechat-guide .guide-step {
+            margin: 0 0 14px;
+            font-size: 17px;
+            line-height: 1.55;
+            font-weight: 500;
+            color: #000;
         }
-        #wechat-guide .steps li:last-child {
-            border-bottom: none;
+        #wechat-guide .guide-step .num {
+            color: #fa5151;
+            font-weight: 700;
+            margin-right: 2px;
         }
-        #wechat-guide .step-num {
-            flex-shrink: 0;
-            width: 26px;
-            height: 26px;
-            border-radius: 50%;
-            background: #4f6ef7;
-            color: #fff;
+        #wechat-guide .guide-step .dots {
+            color: #fa5151;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+        #wechat-guide .guide-step .globe {
+            display: inline-flex;
+            vertical-align: middle;
+            width: 22px;
+            height: 22px;
+            margin: 0 2px;
+        }
+        #wechat-guide .corner-arrow {
+            position: fixed;
+            top: 6px;
+            right: 8px;
+            width: 88px;
+            height: 88px;
+            pointer-events: none;
+            z-index: 10;
+        }
+        #wechat-guide .corner-arrow path {
+            fill: none;
+            stroke: #333;
+            stroke-width: 2.2;
+            stroke-linecap: round;
+        }
+        #wechat-guide .flow-arrow {
+            display: block;
+            width: 42px;
+            height: 120px;
+            margin: 8px auto 0;
+            pointer-events: none;
+        }
+        #wechat-guide .flow-arrow path {
+            fill: none;
+            stroke: #333;
+            stroke-width: 2;
+            stroke-linecap: round;
+        }
+        #wechat-guide .wechat-sheet {
+            background: #f7f7f7;
+            border-radius: 12px 12px 0 0;
+            padding: 16px 12px 24px;
+            padding-bottom: calc(24px + env(safe-area-inset-bottom, 0));
+            box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.06);
+        }
+        #wechat-guide .sheet-title {
+            text-align: center;
             font-size: 13px;
-            font-weight: 600;
+            color: #888;
+            margin: 0 0 14px;
+        }
+        #wechat-guide .share-row {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #e5e5e5;
+        }
+        #wechat-guide .share-item {
+            width: 18%;
+            min-width: 56px;
+            text-align: center;
+            font-size: 11px;
+            color: #576b95;
+        }
+        #wechat-guide .share-item .icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            margin: 0 auto 6px;
+            background: #fff;
             display: flex;
             align-items: center;
             justify-content: center;
+            font-size: 22px;
+        }
+        #wechat-guide .action-row {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 6px 4px;
+        }
+        #wechat-guide .action-item {
+            width: 18%;
+            min-width: 58px;
+            text-align: center;
+            font-size: 11px;
+            color: #333;
+            position: relative;
+        }
+        #wechat-guide .action-item .icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            margin: 0 auto 6px;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: #576b95;
+        }
+        #wechat-guide .action-item.highlight .icon {
+            box-shadow: 0 0 0 2px #fa5151;
+            border-radius: 10px;
+        }
+        #wechat-guide .action-item.highlight::after {
+            content: "";
+            position: absolute;
+            top: -4px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 54px;
+            height: 54px;
+            border: 2px solid #fa5151;
+            border-radius: 10px;
+            pointer-events: none;
+        }
+        #wechat-guide .guide-footer {
+            padding: 12px 16px 20px;
+            background: #ededed;
+            text-align: center;
         }
         #wechat-guide .target-preview {
-            font-size: 13px;
+            font-size: 12px;
             color: #888;
             word-break: break-all;
-            text-align: center;
-            margin-bottom: 20px;
-            padding: 0 8px;
+            margin: 0 0 12px;
         }
         #wechat-guide .target-preview strong {
             color: #333;
@@ -172,32 +260,28 @@
         }
         #wechat-guide .guide-actions {
             display: flex;
-            flex-direction: column;
-            gap: 12px;
-            max-width: 320px;
-            margin: 0 auto;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
         }
         #wechat-guide .guide-actions button {
-            width: 100%;
-            padding: 14px 16px;
-            font-size: 16px;
-            font-weight: 600;
+            padding: 10px 16px;
+            font-size: 14px;
             border: none;
-            border-radius: 10px;
+            border-radius: 6px;
             cursor: pointer;
-        }
-        #wechat-guide .btn-copy {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #07c160;
             color: #fff;
         }
-        #wechat-guide .btn-copy:active {
-            opacity: 0.9;
+        #wechat-guide .guide-actions .btn-secondary {
+            background: #fff;
+            color: #333;
+            border: 1px solid #ddd;
         }
         #wechat-guide .copy-hint {
-            text-align: center;
-            font-size: 12px;
+            font-size: 11px;
             color: #999;
-            margin-top: 12px;
+            margin: 10px 0 0;
         }
     </style>
 </head>
@@ -219,25 +303,50 @@
     </div>
 
     <div id="wechat-guide">
-        <svg class="guide-arrow" viewBox="0 0 64 64" aria-hidden="true">
-            <path d="M8 48 Q 40 8 56 12" fill="none" stroke="#4f6ef7" stroke-width="3" stroke-linecap="round"/>
-            <polygon points="56,12 48,20 52,14 58,18" fill="#4f6ef7"/>
+        <svg class="corner-arrow" viewBox="0 0 80 80" aria-hidden="true">
+            <path d="M12 58 Q 38 28 62 14"/>
+            <path d="M62 14 L54 18 M62 14 L58 22"/>
         </svg>
-        <div class="guide-header">
-            <h1>请在浏览器中打开</h1>
-            <p>微信/QQ/淘宝等 App 内置浏览器无法可靠跳转，请用系统浏览器打开本页；打开后将自动跳转到您要访问的完整链接。</p>
+        <div class="guide-top">
+            <p class="guide-step"><span class="num">1</span> 请点击屏幕右上角 <span class="dots">···</span></p>
+            <p class="guide-step">
+                <span class="num">2</span> 在
+                <svg class="globe" viewBox="0 0 24 24" aria-hidden="true">
+                    <circle cx="12" cy="12" r="9" fill="none" stroke="#576b95" stroke-width="1.5"/>
+                    <ellipse cx="12" cy="12" rx="4" ry="9" fill="none" stroke="#576b95" stroke-width="1.2"/>
+                    <path d="M3 12h18M4.5 7h15M4.5 17h15" stroke="#576b95" stroke-width="1"/>
+                </svg>
+                浏览器打开
+            </p>
+            <svg class="flow-arrow" viewBox="0 0 40 120" aria-hidden="true">
+                <path d="M20 4 Q 28 40 20 72 Q 12 96 20 112"/>
+                <path d="M20 112 L14 100 M20 112 L26 100"/>
+            </svg>
         </div>
-        <ol class="steps">
-            <li><span class="step-num">1</span><span>点击右上角 <strong>「···」</strong> 或 <strong>「⋮」</strong> 菜单</span></li>
-            <li><span class="step-num">2</span><span>选择 <strong>「在浏览器中打开」</strong> 或 <strong>「在Safari/Chrome中打开」</strong></span></li>
-            <li><span class="step-num">3</span><span>在浏览器中打开后，将自动跳转到目标链接</span></li>
-        </ol>
-        <p class="target-preview">即将访问：<strong id="guide-target-host">...</strong></p>
-        <div class="guide-actions">
-            <button type="button" class="btn-copy" id="force-jump">继续访问目标网站</button>
-            <button type="button" class="btn-copy" id="copy-page-link" style="background:#eef0f4;color:#333;font-weight:500;">复制本页链接</button>
+        <div class="wechat-sheet">
+            <p class="sheet-title">分享到</p>
+            <div class="share-row">
+                <div class="share-item"><div class="icon">💬</div>发送给朋友</div>
+                <div class="share-item"><div class="icon">📷</div>朋友圈</div>
+                <div class="share-item"><div class="icon">⭐</div>收藏</div>
+                <div class="share-item"><div class="icon">🔗</div>复制链接</div>
+            </div>
+            <div class="action-row">
+                <div class="action-item"><div class="icon">⤢</div>浮窗</div>
+                <div class="action-item"><div class="icon">🔗</div>复制链接</div>
+                <div class="action-item highlight"><div class="icon">🌐</div>默认浏览器打开</div>
+                <div class="action-item"><div class="icon">↻</div>刷新</div>
+                <div class="action-item"><div class="icon">⚠</div>举报</div>
+            </div>
         </div>
-        <p class="copy-hint">已在 Safari/Chrome 中打开仍停在本页？点「继续访问目标网站」</p>
+        <div class="guide-footer">
+            <p class="target-preview">打开浏览器后将访问：<strong id="guide-target-host">...</strong></p>
+            <div class="guide-actions">
+                <button type="button" id="force-jump">继续访问</button>
+                <button type="button" class="btn-secondary" id="copy-page-link">复制本页链接</button>
+            </div>
+            <p class="copy-hint">已在系统浏览器中？点「继续访问」</p>
+        </div>
     </div>
     
     <div id="error" class="error" style="display: none;">
